@@ -1,0 +1,38 @@
+import requests
+import pandas as pd
+import datetime
+
+def epoch(ts):
+  timestamp = datetime.datetime.fromtimestamp(ts)
+  formatted_timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+  return formatted_timestamp
+
+
+flight_id = '31ded076'
+# Define the API endpoint URL
+url = 'https://data-live.flightradar24.com/clickhandler/?version=1.5&flight=' + flight_id  # Replace with the actual API endpoint URL
+# https://www.flightradar24.com/flights/most-tracked
+
+
+# Send a GET request to the API
+response = requests.get(url)
+
+df = pd.DataFrame(columns=["flight_id", "trail_lat", "trail_lng", "trail_alt", "trail_spd", "trail_ts", "trail_hd"])
+
+# Check if the request was successful (status code 200)
+if response.status_code == 200:
+    # Parse the JSON response
+    data = response.json()
+    print(len(data['trail']))
+    # Now 'data' contains the JSON data returned by the API
+    for i in range(len(data['trail'])):
+      lat = data['trail'][i]['lat']
+      lng = data['trail'][i]['lng']
+      alt = data['trail'][i]['alt']
+      spd = data['trail'][i]['spd']
+      ts = epoch(data['trail'][i]['ts'])
+      hd = data['trail'][i]['hd']
+      df1 = pd.DataFrame(data=[[flight_id,lat,lng,alt,spd,ts,hd]],columns=["flight_id", "trail_lat", "trail_lng", "trail_alt", "trail_spd", "trail_ts", "trail_hd"])
+      df = pd.concat([df,df1], axis=0)
+else:
+  print(f"Failed to retrieve data. Status code: {response.status_code}")
